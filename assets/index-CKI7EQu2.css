@@ -57,15 +57,8 @@ body {
   font-weight: 400;
 }
 
-#app {
-  width: var(--app-width);
-  height: var(--app-height);
-  margin: auto;
-  position: relative;
-}
-
-main {
-  height: calc(100% - var(--header-height));
+.space {
+  padding-bottom: 20px;
 }
 
 /* GNB ********************************************/
@@ -107,12 +100,11 @@ main {
 
 .modal-backdrop {
   display: none;
-  margin: auto;
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.35);
-  width: var(--app-width);
-  height: var(--app-height);
+  width: 100%;
+  height: 100%;
 }
 
 .modal-backdrop.open {
@@ -120,12 +112,17 @@ main {
 }
 
 .modal-container {
-  border-radius: 8px 8px 0px 0px;
-  padding: 32px 16px;
-  background: var(--grey-100);
-  width: var(--app-width);
-  position: absolute;
+  position: fixed;
   bottom: 0;
+  width: 100%;
+  max-height: 100vh;
+  padding: 32px 16px;
+
+  overflow: scroll;
+  scrollbar-width: none;
+
+  border-radius: 8px 8px 0px 0px;
+  background: var(--grey-100);
 }
 
 .modal-title {
@@ -144,7 +141,8 @@ main {
   font-size: 14px;
 }
 
-.form-item--required label::after {
+.form-item:has(input[required]) label::after,
+.form-item:has(select[required]) label::after {
   padding-left: 4px;
 
   color: var(--primary-color);
@@ -227,6 +225,27 @@ input[name="link"] {
 
 /* 음식점 목록 *****************************************/
 
+/* 자주 가는 음식점 필터 */
+
+.favorite-filter-container {
+  display: flex;
+}
+
+.favorite-filter-tab {
+  flex: 1;
+  border-bottom: 2px solid var(--grey-200);
+  color: var(--grey-300);
+  font-weight: 700;
+  padding: 9px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.favorite-filter-tab.active {
+  border-bottom: 2px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
 /* 카테고리/정렬 필터 */
 
 .restaurant-filter-container {
@@ -300,9 +319,21 @@ input[name="link"] {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  position: relative;
+  width: 100%;
+}
+
+.restaurant__favorite-mark {
+  color: var(--primary-color);
+  font-size: 30px;
+  cursor: pointer;
+  position: absolute;
+  right: 0;
 }
 
 .restaurant__name {
+  cursor: pointer;
+  max-width: 300px;
   margin: 0;
 }
 
@@ -312,6 +343,12 @@ input[name="link"] {
 
 .restaurant__description {
   padding-top: 8px;
+}
+
+.restaurant__link {
+  color: var(--grey--500);
+  display: block;
+  margin: 30px 0;
 }
 
 .text-ellipsis {

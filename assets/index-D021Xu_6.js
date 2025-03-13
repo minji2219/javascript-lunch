@@ -699,10 +699,12 @@ setToLocalStorage_fn = function() {
 };
 getFromLocalStorage_fn = function() {
   const storedDataString = localStorage.getItem("restaurants");
-  const parsedData = JSON.parse(storedDataString);
-  __privateSet(this, _restaurants, parsedData.map(
-    (data) => new Restaurant({ ...data, favorite: data.favorite })
-  ));
+  if (storedDataString) {
+    const parsedData = JSON.parse(storedDataString);
+    __privateSet(this, _restaurants, parsedData.map(
+      (data) => new Restaurant({ ...data, favorite: data.favorite })
+    ));
+  }
 };
 filterByFavorite_fn = function() {
   if (__privateGet(this, _filterType).favorite) {

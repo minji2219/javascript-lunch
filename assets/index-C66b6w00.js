@@ -175,12 +175,6 @@ const validateStringLength = (string, { minLength, maxLength }) => {
   if (minLength === 0) throw new Error(`${maxLength}자 이하를 작성해주세요.`);
   throw new Error(`${minLength}자 이상 ${maxLength}자 이하를 작성해주세요.`);
 };
-const getInfo = () => {
-  const form = $("#register-form");
-  const formData = new FormData(form);
-  const info = Object.fromEntries(formData.entries());
-  return validateInfo(info);
-};
 const validateInfo = (info) => {
   addIdToError(
     "category",
@@ -194,11 +188,17 @@ const validateInfo = (info) => {
     "distance",
     () => validateEmptyString(info.distance, ERROR_MESSAGE.DISTANCE_FIELD_REQUIRED)
   );
-  addIdToError(
-    "description",
-    () => validateStringLength(info.description, { minLength: 0, maxLength: 500 })
-  );
+  addIdToError("description", () => {
+    if (info.description)
+      validateStringLength(info.description, { minLength: 0, maxLength: 500 });
+  });
   return info;
+};
+const getInfo = () => {
+  const form = $("#register-form");
+  const formData = new FormData(form);
+  const info = Object.fromEntries(formData.entries());
+  return validateInfo(info);
 };
 const Button = ({ text, style, onClick, type = "submit", id }) => {
   const button = createElement(
@@ -526,6 +526,7 @@ const Distance = (minute) => {
   );
 };
 const RestaurantInfo = ({
+  id,
   name,
   distance,
   description,
@@ -535,6 +536,7 @@ const RestaurantInfo = ({
 }) => {
   const restaurantInfo = document.createElement("div");
   restaurantInfo.classList.add("restaurant__info");
+  restaurantInfo.setAttribute("id", `restaurant__info__${id}`);
   restaurantInfo.appendChild(
     Title({
       text: name,
@@ -559,12 +561,13 @@ const RestaurantInfo = ({
   return restaurantInfo;
 };
 const RestaurantCard = (restaurant, filter, deleteRestaurant) => {
-  const { category, name, distance, description, favorite } = restaurant.info;
+  const { id, category, name, distance, description, favorite } = restaurant.info;
   const restaurantCard = document.createElement("li");
   restaurantCard.classList.add("restaurant");
   restaurantCard.prepend(CategoryImage(category));
   restaurantCard.appendChild(
     RestaurantInfo({
+      id,
       name,
       distance,
       description: [description, true],
@@ -667,9 +670,15 @@ class Restaurants {
       __privateSet(this, _restaurants, __privateGet(this, _restaurants).filter((res) => res.info.id !== id));
     });
     __publicField(this, "changeState", (state) => {
-      const sortType = [...Object.keys(state)];
+      const sortType = Object.keys(state)[0];
       const sortState = state[sortType];
-      __privateGet(this, _filterType)[sortType] = sortState;
+      if (sortType === "category") {
+        __privateGet(this, _filterType).category = sortState;
+      } else if (sortType === "option") {
+        __privateGet(this, _filterType).option = sortState;
+      } else if (sortType === "favorite") {
+        __privateGet(this, _filterType).favorite = sortState;
+      }
       this.filter();
     });
     __publicField(this, "filter", () => {
@@ -702,7 +711,7 @@ getFromLocalStorage_fn = function() {
   if (storedDataString) {
     const parsedData = JSON.parse(storedDataString);
     __privateSet(this, _restaurants, parsedData.map(
-      (data) => new Restaurant({ ...data, favorite: data.favorite })
+      (data) => new Restaurant(data)
     ));
   }
 };

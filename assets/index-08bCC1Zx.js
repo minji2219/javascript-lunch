@@ -9,7 +9,7 @@ var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read fr
 var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
 var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
-var _info, _Restaurant_instances, validate_fn, _restaurants, _filterType, _Restaurants_instances, setToLocalStorage_fn, getFromLocalStorage_fn, filterByFavorite_fn, filterByCategory_fn, sortByName_fn, sortByDistance_fn, renderRestaurants_fn;
+var _info, _Restaurant_instances, validate_fn, _restaurants, _filterType, _restaurants2, _Filter_instances, filterByFavorite_fn, filterByCategory_fn, sortByName_fn, sortByDistance_fn;
 (function polyfill() {
   const relList = document.createElement("link").relList;
   if (relList && relList.supports && relList.supports("modulepreload")) {
@@ -256,246 +256,129 @@ const InputField = (infoType, inputElement, text) => {
   if (text) inputField.appendChild(helpText);
   return inputField;
 };
-const modalCloseAndFilter = (filter) => {
-  modalClose();
-  filter();
-};
-const modalClose = () => {
-  const backDrop = $(".modal-backdrop");
-  backDrop.classList.remove("open");
-  backDrop.replaceChildren();
-};
-const Select = ({
-  name,
-  required = false,
-  options,
-  hasDefaultOption = false,
-  onChange
-}) => {
-  const select = createElement(
-    /*html*/
-    `
-    <select name=${name} id=${name} ${required ? "required" : ""}>
-    </select>
-  `
-  );
-  if (!hasDefaultOption) {
-    const defaultOption = document.createElement("option");
-    defaultOption.setAttribute("value", "");
-    defaultOption.textContent = INPUT_HELP_TEXT.SELECT_PLACEHOLDER;
-    select.appendChild(defaultOption);
+const defaultRestaurants = [
+  new Restaurant({
+    id: 1,
+    category: "korean",
+    name: "피양콩할마니",
+    distance: WALK_TIME_MINUTES[0],
+    description: "평양 출신의 할머니가 수십 년간 운영해온 비지 전문점 피양콩 할마니. 두부를 빼지 않은 되비지를 맛볼 수 있는 곳으로, ‘피양’은 평안도 사투리로 ‘평양’을 의미한다. 딸과 함께 운영하는 이곳에선 맷돌로 직접 간 콩만을 사용하며, 일체의 조미료를 넣지 않은 건강식을 선보인다. 콩비지와 피양 만두가 이곳의 대표 메뉴지만, 할머니가 옛날 방식을 고수하며 만들어내는 비지전골 또한 이 집의 역사를 느낄 수 있는 특별한 메뉴다. 반찬은 손님들이 먹고 싶은 만큼 덜어 먹을 수 있게 준비돼 있다.",
+    link: "http//localhost:30000"
+  }),
+  new Restaurant({
+    id: 2,
+    category: "chinese",
+    name: "친친",
+    distance: WALK_TIME_MINUTES[2],
+    description: "설명입니다",
+    link: "http//localhost:30000"
+  }),
+  new Restaurant({
+    id: 3,
+    category: "japanese",
+    name: "잇쇼우",
+    distance: WALK_TIME_MINUTES[1],
+    description: "설명입니다",
+    link: "http//localhost:30000"
+  }),
+  new Restaurant({
+    id: 4,
+    category: "japanese",
+    name: "한나",
+    distance: WALK_TIME_MINUTES[0],
+    description: "설명입니다",
+    link: "http//localhost:30000"
+  })
+];
+class Restaurants {
+  constructor(restaurantsData) {
+    __privateAdd(this, _restaurants);
+    __publicField(this, "addRestaurant", (restaurant) => {
+      restaurant.grantId(__privateGet(this, _restaurants).length + 1);
+      __privateGet(this, _restaurants).push(restaurant);
+      this.setToLocalStorage();
+    });
+    __publicField(this, "deleteRestaurant", (id) => {
+      __privateSet(this, _restaurants, __privateGet(this, _restaurants).filter((res) => res.info.id !== id));
+      this.setToLocalStorage();
+      return __privateGet(this, _restaurants);
+    });
+    __privateSet(this, _restaurants, restaurantsData || [...defaultRestaurants]);
   }
-  options.forEach((option) => {
-    const optionTag = document.createElement("option");
-    optionTag.setAttribute("value", option.value);
-    optionTag.textContent = option.label;
-    select.appendChild(optionTag);
-  });
-  select.addEventListener("change", onChange);
-  return select;
+  setToLocalStorage() {
+    const stringifyData = JSON.stringify(
+      __privateGet(this, _restaurants).map((restaurant) => restaurant.toJSON())
+    );
+    localStorage.setItem("restaurants", stringifyData);
+  }
+  getFromLocalStorage() {
+    const storedDataString = localStorage.getItem("restaurants");
+    if (storedDataString) {
+      const parsedData = JSON.parse(storedDataString);
+      __privateSet(this, _restaurants, parsedData.map(
+        (data) => new Restaurant(data)
+      ));
+      return __privateGet(this, _restaurants);
+    }
+    this.setToLocalStorage();
+    return __privateGet(this, _restaurants);
+  }
+  get restaurants() {
+    return __privateGet(this, _restaurants);
+  }
+}
+_restaurants = new WeakMap();
+class Filter {
+  constructor(restaurants) {
+    __privateAdd(this, _Filter_instances);
+    __privateAdd(this, _filterType);
+    __privateAdd(this, _restaurants2);
+    __publicField(this, "filterBySortType", (sortType, sortState) => {
+      __privateGet(this, _filterType)[sortType] = sortState;
+      return this.filter();
+    });
+    __publicField(this, "filter", () => {
+      const filtered = __privateMethod(this, _Filter_instances, filterByCategory_fn).call(this, __privateMethod(this, _Filter_instances, filterByFavorite_fn).call(this));
+      if (__privateGet(this, _filterType).option === "name") __privateMethod(this, _Filter_instances, sortByName_fn).call(this, filtered);
+      if (__privateGet(this, _filterType).option === "distance") __privateMethod(this, _Filter_instances, sortByDistance_fn).call(this, filtered);
+      return filtered;
+    });
+    __privateSet(this, _filterType, {
+      category: "all",
+      option: "name",
+      favorite: false
+    });
+    __privateSet(this, _restaurants2, restaurants);
+  }
+}
+_filterType = new WeakMap();
+_restaurants2 = new WeakMap();
+_Filter_instances = new WeakSet();
+filterByFavorite_fn = function() {
+  if (__privateGet(this, _filterType).favorite) {
+    return [...__privateGet(this, _restaurants2)].filter(
+      (restaurant) => restaurant.info.favorite
+    );
+  }
+  return [...__privateGet(this, _restaurants2)];
 };
-const TextArea = ({ name, required = false }) => {
-  return createElement(
-    /*html*/
-    `
-    <textarea type="text" name=${name} id=${name} required=${required}></textarea>
-  `
+filterByCategory_fn = function(restaurants) {
+  if (__privateGet(this, _filterType).category === "all") return restaurants;
+  return restaurants.filter(
+    (restaurant) => restaurant.info.category === __privateGet(this, _filterType).category
   );
+};
+sortByName_fn = function(restaurants) {
+  return restaurants.sort((a, b) => a.info.name.localeCompare(b.info.name));
+};
+sortByDistance_fn = function(restaurants) {
+  return restaurants.sort((a, b) => a.info.distance - b.info.distance);
 };
 const ButtonContainer = (buttons) => {
   const buttonContainer = document.createElement("div");
   buttonContainer.classList.add("button-container");
   buttons.forEach((button) => buttonContainer.appendChild(button));
   return buttonContainer;
-};
-const RegisterForm = (addRestaurant) => {
-  const registerForm = document.createElement("form");
-  registerForm.setAttribute("id", "register-form");
-  registerForm.appendChild(
-    InputField(
-      "category",
-      Select({
-        name: "category",
-        required: true,
-        options: Object.keys(FOOD_CATEGORY).map((key) => ({
-          label: FOOD_CATEGORY[key],
-          value: key
-        }))
-      })
-    )
-  );
-  registerForm.appendChild(
-    InputField("name", Input({ name: "name", required: true }))
-  );
-  registerForm.appendChild(
-    InputField(
-      "distance",
-      Select({
-        name: "distance",
-        required: true,
-        options: WALK_TIME_MINUTES.map((key) => ({
-          label: `${key}분 내`,
-          value: `${key}`
-        }))
-      })
-    )
-  );
-  registerForm.appendChild(
-    InputField(
-      "description",
-      TextArea({ name: "description" }),
-      INPUT_HELP_TEXT.DESCRIPTION
-    )
-  );
-  registerForm.appendChild(
-    InputField("link", Input({ name: "link" }), INPUT_HELP_TEXT.LINK)
-  );
-  registerForm.appendChild(
-    ButtonContainer([
-      Button({
-        text: BUTTON_TEXT.CANCEL,
-        style: "button--secondary",
-        onClick: modalClose,
-        type: "button",
-        id: "cancel-button"
-      }),
-      ,
-      Button({
-        text: BUTTON_TEXT.ADD,
-        style: "button--primary",
-        onClick: (e) => {
-          try {
-            registerRestaurant(e, addRestaurant);
-          } catch (e2) {
-            onSubmitFailed(e2);
-          }
-        },
-        id: "register-button"
-      })
-    ])
-  );
-  return registerForm;
-};
-const onSubmitFailed = (e) => {
-  const currentInputField = $(`#${e.cause}-form-item`);
-  currentInputField.appendChild(ErrorMessage(e.message));
-};
-const registerRestaurant = (e, addRestaurant) => {
-  e.preventDefault();
-  const info = getInfo();
-  addRestaurant(new Restaurant(info));
-  $("select#category").value = "all";
-  modalClose();
-};
-const registerIcon = (addRestaurant) => {
-  const registerIcon2 = document.createElement("button");
-  registerIcon2.classList.add("gnb__button");
-  registerIcon2.appendChild(Image("./add-button.png", "음식점 추가"));
-  registerIcon2.addEventListener("click", () => {
-    $(".modal-backdrop").classList.add("open");
-    ModalContent([
-      Title({
-        text: "새로운 음식점",
-        tagName: "h2",
-        className: ["modal-title", "text-title"]
-      }),
-      RegisterForm(addRestaurant)
-    ]);
-  });
-  return registerIcon2;
-};
-const header = (addRestaurant) => {
-  const header2 = document.createElement("header");
-  header2.classList.add("gnb");
-  header2.appendChild(
-    Title({
-      text: "점심 뭐 먹지",
-      tagName: "h1",
-      className: ["gnb__title", "text-title"]
-    })
-  );
-  header2.appendChild(registerIcon(addRestaurant));
-  return header2;
-};
-const Modal = (filter) => {
-  const backDrop = createElement(
-    /*html*/
-    `
-    <div class="modal-backdrop"></div>
-  `
-  );
-  backDrop.addEventListener("click", () => modalCloseAndFilter(filter));
-  return backDrop;
-};
-const CategoryAndSortFilter = (changeState) => {
-  const filterContainer = document.createElement("section");
-  filterContainer.classList.add("restaurant-filter-container");
-  filterContainer.appendChild(
-    Select({
-      hasDefaultOption: true,
-      name: "category",
-      options: [
-        { label: "전체", value: "all" },
-        ...Object.keys(FOOD_CATEGORY).map((key) => ({
-          label: FOOD_CATEGORY[key],
-          value: key
-        }))
-      ],
-      onChange: (e) => changeState({ category: e.target.value })
-    })
-  );
-  filterContainer.appendChild(
-    Select({
-      hasDefaultOption: true,
-      name: "sorting",
-      options: [
-        { label: "이름순", value: "name" },
-        { label: "거리순", value: "distance" }
-      ],
-      onChange: (e) => changeState({ option: e.target.value })
-    })
-  );
-  return filterContainer;
-};
-const Tab = ({ text, id, active = false, changeState }) => {
-  const tab = createElement(
-    /*html*/
-    `
-    <div class="favorite-filter-tab ${active ? "active" : ""}" id=${id}>${text}</div>
-  `
-  );
-  tab.addEventListener("click", (e) => {
-    var _a, _b;
-    (_a = e.target.previousSibling) == null ? void 0 : _a.classList.remove("active");
-    (_b = e.target.nextSibling) == null ? void 0 : _b.classList.remove("active");
-    e.target.classList.add("active");
-    if (e.target.id === "favorite-all") {
-      changeState({ favorite: false });
-      return;
-    }
-    changeState({ favorite: true });
-  });
-  return tab;
-};
-const FavoriteTabFilters = (changeState) => {
-  const filters = document.createElement("div");
-  filters.classList.add("favorite-filter-container");
-  filters.appendChild(
-    Tab({
-      text: "모든 음식점",
-      id: "favorite-all",
-      active: true,
-      changeState
-    })
-  );
-  filters.appendChild(
-    Tab({
-      text: "자주 가는 음식점",
-      id: "favorite",
-      changeState
-    })
-  );
-  return filters;
 };
 const Space = () => {
   return createElement(`<div class="space"></div>`);
@@ -560,8 +443,8 @@ const RestaurantInfo = ({
   restaurantInfo.appendChild(favoriteMark);
   return restaurantInfo;
 };
-const RestaurantCard = (restaurant, filter, deleteRestaurant) => {
-  const { id, category, name, distance, description, favorite } = restaurant.info;
+const RestaurantCard = (restaurantData, restaurants) => {
+  const { id, category, name, distance, description, favorite } = restaurantData.info;
   const restaurantCard = document.createElement("li");
   restaurantCard.classList.add("restaurant");
   restaurantCard.prepend(CategoryImage(category));
@@ -573,16 +456,16 @@ const RestaurantCard = (restaurant, filter, deleteRestaurant) => {
       description: [description, true],
       favorite,
       toggleFavoriteMark: () => {
-        restaurant.toggleFavoriteMark();
-        filter();
+        restaurantData.toggleFavoriteMark();
+        RestaurantList(restaurants.restaurants);
       },
-      handleClickTitle: () => handleClickTitle(restaurant, filter, deleteRestaurant)
+      handleClickTitle: () => handleClickTitle(restaurantData, restaurants)
     })
   );
   return restaurantCard;
 };
-function handleClickTitle(restaurant, filter, deleteRestaurant) {
-  const { category, name, distance, description, favorite, link } = restaurant.info;
+function handleClickTitle(restaurantData, restaurants) {
+  const { category, name, distance, description, favorite, link } = restaurantData.info;
   $(".modal-backdrop").classList.add("open");
   ModalContent([
     CategoryImage(category),
@@ -592,7 +475,7 @@ function handleClickTitle(restaurant, filter, deleteRestaurant) {
       distance,
       description: [description, false],
       favorite,
-      toggleFavoriteMark: restaurant.toggleFavoriteMark
+      toggleFavoriteMark: restaurantData.toggleFavoriteMark
     }),
     createElement(
       /*html*/
@@ -605,8 +488,10 @@ function handleClickTitle(restaurant, filter, deleteRestaurant) {
         onClick: () => {
           const isConfirm = confirm("정말 삭제하시겠습니까?");
           if (isConfirm) {
-            deleteRestaurant(restaurant.info.id);
-            modalCloseAndFilter(filter);
+            RestaurantList(
+              restaurants.deleteRestaurant(restaurantData.info.id)
+            );
+            modalClose();
           }
         },
         type: "button",
@@ -615,146 +500,293 @@ function handleClickTitle(restaurant, filter, deleteRestaurant) {
       Button({
         text: BUTTON_TEXT.CLOSE,
         style: "button--primary",
-        onClick: () => modalCloseAndFilter(filter),
+        onClick: () => {
+          modalClose();
+          RestaurantList(restaurants.restaurants);
+        },
         id: "close-button"
       })
     ])
   ]);
 }
-const defaultRestaurants = [
-  new Restaurant({
-    id: 1,
-    category: "korean",
-    name: "피양콩할마니",
-    distance: WALK_TIME_MINUTES[0],
-    description: "평양 출신의 할머니가 수십 년간 운영해온 비지 전문점 피양콩 할마니. 두부를 빼지 않은 되비지를 맛볼 수 있는 곳으로, ‘피양’은 평안도 사투리로 ‘평양’을 의미한다. 딸과 함께 운영하는 이곳에선 맷돌로 직접 간 콩만을 사용하며, 일체의 조미료를 넣지 않은 건강식을 선보인다. 콩비지와 피양 만두가 이곳의 대표 메뉴지만, 할머니가 옛날 방식을 고수하며 만들어내는 비지전골 또한 이 집의 역사를 느낄 수 있는 특별한 메뉴다. 반찬은 손님들이 먹고 싶은 만큼 덜어 먹을 수 있게 준비돼 있다.",
-    link: "http//localhost:30000"
-  }),
-  new Restaurant({
-    id: 2,
-    category: "chinese",
-    name: "친친",
-    distance: WALK_TIME_MINUTES[2],
-    description: "설명입니다",
-    link: "http//localhost:30000"
-  }),
-  new Restaurant({
-    id: 3,
-    category: "japanese",
-    name: "잇쇼우",
-    distance: WALK_TIME_MINUTES[1],
-    description: "설명입니다",
-    link: "http//localhost:30000"
-  }),
-  new Restaurant({
-    id: 4,
-    category: "japanese",
-    name: "한나",
-    distance: WALK_TIME_MINUTES[0],
-    description: "설명입니다",
-    link: "http//localhost:30000"
-  })
-];
-class Restaurants {
-  constructor() {
-    __privateAdd(this, _Restaurants_instances);
-    __privateAdd(this, _restaurants);
-    __privateAdd(this, _filterType);
-    __publicField(this, "addRestaurant", (restaurant) => {
-      restaurant.grantId(__privateGet(this, _restaurants).length + 1);
-      __privateGet(this, _restaurants).push(restaurant);
-      __privateGet(this, _filterType).category = "all";
-      this.filter();
-    });
-    __publicField(this, "deleteRestaurant", (id) => {
-      __privateSet(this, _restaurants, __privateGet(this, _restaurants).filter((res) => res.info.id !== id));
-    });
-    __publicField(this, "changeState", (state) => {
-      const sortType = Object.keys(state)[0];
-      const sortState = state[sortType];
-      if (sortType === "category") {
-        __privateGet(this, _filterType).category = sortState;
-      } else if (sortType === "option") {
-        __privateGet(this, _filterType).option = sortState;
-      } else if (sortType === "favorite") {
-        __privateGet(this, _filterType).favorite = sortState;
-      }
-      this.filter();
-    });
-    __publicField(this, "filter", () => {
-      const filtered = __privateMethod(this, _Restaurants_instances, filterByCategory_fn).call(this, __privateMethod(this, _Restaurants_instances, filterByFavorite_fn).call(this));
-      if (__privateGet(this, _filterType).option === "name") __privateMethod(this, _Restaurants_instances, sortByName_fn).call(this, filtered);
-      if (__privateGet(this, _filterType).option === "distance") __privateMethod(this, _Restaurants_instances, sortByDistance_fn).call(this, filtered);
-      __privateMethod(this, _Restaurants_instances, renderRestaurants_fn).call(this, filtered);
-    });
-    __privateSet(this, _restaurants, [...defaultRestaurants]);
-    __privateSet(this, _filterType, {
-      category: "all",
-      option: "name",
-      favorite: false
-    });
-    __privateMethod(this, _Restaurants_instances, getFromLocalStorage_fn).call(this);
-    this.filter();
-  }
-}
-_restaurants = new WeakMap();
-_filterType = new WeakMap();
-_Restaurants_instances = new WeakSet();
-setToLocalStorage_fn = function() {
-  const stringifyData = JSON.stringify(
-    __privateGet(this, _restaurants).map((restaurant) => restaurant.toJSON())
-  );
-  localStorage.setItem("restaurants", stringifyData);
-};
-getFromLocalStorage_fn = function() {
-  const storedDataString = localStorage.getItem("restaurants");
-  if (storedDataString) {
-    const parsedData = JSON.parse(storedDataString);
-    __privateSet(this, _restaurants, parsedData.map(
-      (data) => new Restaurant(data)
-    ));
-  }
-};
-filterByFavorite_fn = function() {
-  if (__privateGet(this, _filterType).favorite) {
-    return [...__privateGet(this, _restaurants)].filter(
-      (restaurant) => restaurant.info.favorite
-    );
-  }
-  return [...__privateGet(this, _restaurants)];
-};
-filterByCategory_fn = function(restaurants) {
-  if (__privateGet(this, _filterType).category === "all") return restaurants;
-  return restaurants.filter(
-    (restaurant) => restaurant.info.category === __privateGet(this, _filterType).category
-  );
-};
-sortByName_fn = function(restaurants) {
-  return restaurants.sort((a, b) => a.info.name.localeCompare(b.info.name));
-};
-sortByDistance_fn = function(restaurants) {
-  return restaurants.sort((a, b) => a.info.distance - b.info.distance);
-};
-renderRestaurants_fn = function(restaurants) {
+const RestaurantList = (restaurantListData) => {
+  const restaurants = new Restaurants(restaurantListData);
   const ulTag = $(".restaurant-list");
   ulTag.replaceChildren();
-  if (restaurants.length === 0) {
+  if (restaurantListData.length === 0) {
     ulTag.appendChild(
       createElement(`<div>등록된 식당이 존재하지 않습니다.</div>`)
     );
     return;
   }
-  __privateMethod(this, _Restaurants_instances, setToLocalStorage_fn).call(this);
-  restaurants.forEach((restaurant) => {
-    ulTag.appendChild(
-      RestaurantCard(restaurant, () => this.filter(), this.deleteRestaurant)
-    );
+  restaurantListData.forEach((restaurantData) => {
+    ulTag.appendChild(RestaurantCard(restaurantData, restaurants));
   });
 };
+const modalCloseAndFilter = (filter) => {
+  const restaurantList = filter.filter();
+  RestaurantList(restaurantList);
+  modalClose();
+};
+const modalClose = () => {
+  const backDrop = $(".modal-backdrop");
+  backDrop.classList.remove("open");
+  backDrop.replaceChildren();
+};
+const Select = ({
+  name,
+  required = false,
+  options,
+  hasDefaultOption = false,
+  onChange
+}) => {
+  const select = createElement(
+    /*html*/
+    `
+    <select name=${name} id=${name} ${required ? "required" : ""}>
+    </select>
+  `
+  );
+  if (!hasDefaultOption) {
+    const defaultOption = document.createElement("option");
+    defaultOption.setAttribute("value", "");
+    defaultOption.textContent = INPUT_HELP_TEXT.SELECT_PLACEHOLDER;
+    select.appendChild(defaultOption);
+  }
+  options.forEach((option) => {
+    const optionTag = document.createElement("option");
+    optionTag.setAttribute("value", option.value);
+    optionTag.textContent = option.label;
+    select.appendChild(optionTag);
+  });
+  select.addEventListener("change", onChange);
+  return select;
+};
+const TextArea = ({ name, required = false }) => {
+  return createElement(
+    /*html*/
+    `
+    <textarea type="text" name=${name} id=${name} required=${required}></textarea>
+  `
+  );
+};
+const RegisterForm = (onRegister) => {
+  const registerForm = document.createElement("form");
+  registerForm.setAttribute("id", "register-form");
+  registerForm.appendChild(
+    InputField(
+      "category",
+      Select({
+        name: "category",
+        required: true,
+        options: Object.keys(FOOD_CATEGORY).map((key) => ({
+          label: FOOD_CATEGORY[key],
+          value: key
+        }))
+      })
+    )
+  );
+  registerForm.appendChild(
+    InputField("name", Input({ name: "name", required: true }))
+  );
+  registerForm.appendChild(
+    InputField(
+      "distance",
+      Select({
+        name: "distance",
+        required: true,
+        options: WALK_TIME_MINUTES.map((key) => ({
+          label: `${key}분 내`,
+          value: `${key}`
+        }))
+      })
+    )
+  );
+  registerForm.appendChild(
+    InputField(
+      "description",
+      TextArea({ name: "description" }),
+      INPUT_HELP_TEXT.DESCRIPTION
+    )
+  );
+  registerForm.appendChild(
+    InputField("link", Input({ name: "link" }), INPUT_HELP_TEXT.LINK)
+  );
+  registerForm.appendChild(
+    ButtonContainer([
+      Button({
+        text: BUTTON_TEXT.CANCEL,
+        style: "button--secondary",
+        onClick: modalClose,
+        type: "button",
+        id: "cancel-button"
+      }),
+      ,
+      Button({
+        text: BUTTON_TEXT.ADD,
+        style: "button--primary",
+        onClick: (e) => {
+          try {
+            registerRestaurant(e, onRegister);
+          } catch (e2) {
+            onSubmitFailed(e2);
+          }
+        },
+        id: "register-button"
+      })
+    ])
+  );
+  return registerForm;
+};
+const onSubmitFailed = (e) => {
+  const currentInputField = $(`#${e.cause}-form-item`);
+  currentInputField.appendChild(ErrorMessage(e.message));
+};
+const registerRestaurant = (e, onRegister) => {
+  e.preventDefault();
+  const { addRestaurant, onChangeCategoryAll } = onRegister;
+  const info = getInfo();
+  addRestaurant(new Restaurant(info));
+  $("select#category").value = "all";
+  const restaurantList = onChangeCategoryAll();
+  RestaurantList(restaurantList);
+  modalClose();
+};
+const registerIcon = (onRegister) => {
+  const registerIcon2 = document.createElement("button");
+  registerIcon2.classList.add("gnb__button");
+  registerIcon2.appendChild(Image("./add-button.png", "음식점 추가"));
+  registerIcon2.addEventListener("click", () => {
+    $(".modal-backdrop").classList.add("open");
+    ModalContent([
+      Title({
+        text: "새로운 음식점",
+        tagName: "h2",
+        className: ["modal-title", "text-title"]
+      }),
+      RegisterForm(onRegister)
+    ]);
+  });
+  return registerIcon2;
+};
+const header = (onRegister) => {
+  const header2 = document.createElement("header");
+  header2.classList.add("gnb");
+  header2.appendChild(
+    Title({
+      text: "점심 뭐 먹지",
+      tagName: "h1",
+      className: ["gnb__title", "text-title"]
+    })
+  );
+  header2.appendChild(registerIcon(onRegister));
+  return header2;
+};
+const Modal = (filter) => {
+  const backDrop = createElement(
+    /*html*/
+    `
+    <div class="modal-backdrop"></div>
+  `
+  );
+  backDrop.addEventListener("click", () => modalCloseAndFilter(filter));
+  return backDrop;
+};
+const CategoryAndSortFilter = ({ onSortByCategory, onSortByOption }) => {
+  const filterContainer = document.createElement("section");
+  filterContainer.classList.add("restaurant-filter-container");
+  filterContainer.appendChild(
+    Select({
+      hasDefaultOption: true,
+      name: "category",
+      options: [
+        { label: "전체", value: "all" },
+        ...Object.keys(FOOD_CATEGORY).map((key) => ({
+          label: FOOD_CATEGORY[key],
+          value: key
+        }))
+      ],
+      onChange: (e) => {
+        const restaurantList = onSortByCategory(e.target.value);
+        RestaurantList(restaurantList);
+      }
+    })
+  );
+  filterContainer.appendChild(
+    Select({
+      hasDefaultOption: true,
+      name: "sorting",
+      options: [
+        { label: "이름순", value: "name" },
+        { label: "거리순", value: "distance" }
+      ],
+      onChange: (e) => {
+        const restaurantList = onSortByOption(e.target.value);
+        RestaurantList(restaurantList);
+      }
+    })
+  );
+  return filterContainer;
+};
+const Tab = ({ text, id, active = false, changeState }) => {
+  const tab = createElement(
+    /*html*/
+    `
+    <div class="favorite-filter-tab ${active ? "active" : ""}" id=${id}>${text}</div>
+  `
+  );
+  tab.addEventListener("click", (e) => {
+    var _a, _b;
+    (_a = e.target.previousSibling) == null ? void 0 : _a.classList.remove("active");
+    (_b = e.target.nextSibling) == null ? void 0 : _b.classList.remove("active");
+    e.target.classList.add("active");
+    const restaurantList = changeState();
+    RestaurantList(restaurantList);
+  });
+  return tab;
+};
+const FavoriteTabFilters = ({ onSortByFavorite }) => {
+  const filters = document.createElement("div");
+  filters.classList.add("favorite-filter-container");
+  filters.appendChild(
+    Tab({
+      text: "모든 음식점",
+      id: "favorite-all",
+      active: true,
+      changeState: () => onSortByFavorite(false)
+    })
+  );
+  filters.appendChild(
+    Tab({
+      text: "자주 가는 음식점",
+      id: "favorite",
+      changeState: () => onSortByFavorite(true)
+    })
+  );
+  return filters;
+};
 addEventListener("load", () => {
-  const restaurantList = new Restaurants();
-  $("#app").prepend(header(restaurantList.addRestaurant));
-  $("main").prepend(CategoryAndSortFilter(restaurantList.changeState));
-  $("main").prepend(FavoriteTabFilters(restaurantList.changeState));
-  $("main").appendChild(Modal(restaurantList.filter));
+  const restaurants = new Restaurants();
+  const restaurantList = restaurants.getFromLocalStorage();
+  const filter = new Filter(restaurantList);
+  const filteredItem = filter.filter();
+  RestaurantList(filteredItem);
+  $("#app").prepend(
+    header({
+      addRestaurant: restaurants.addRestaurant,
+      onChangeCategoryAll: () => filter.filterBySortType("category", "all")
+    })
+  );
+  $("main").prepend(
+    CategoryAndSortFilter({
+      onSortByCategory: (category) => filter.filterBySortType("category", category),
+      onSortByOption: (option) => filter.filterBySortType("option", option)
+    })
+  );
+  $("main").prepend(
+    FavoriteTabFilters({
+      onSortByFavorite: (favorite) => filter.filterBySortType("favorite", favorite)
+    })
+  );
+  $("main").appendChild(Modal(filter));
 });
